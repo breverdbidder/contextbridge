@@ -1,0 +1,25 @@
+# ContextBridge API Requirements
+# Install: pip install -r requirements.txt
+
+# Core API framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+
+# AI/ML
+anthropic==0.18.1
+openai==1.12.0
+
+# Database
+supabase==2.3.4
+pgvector==0.2.5
+
+# LangGraph orchestration
+langgraph==0.0.20
+langchain==0.1.6
+langchain-core==0.1.18
+
+# Utilities
+python-dotenv==1.0.0
+httpx==0.26.0
+aiohttp==3.9.3
