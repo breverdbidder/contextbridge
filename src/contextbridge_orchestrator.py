@@ -29,11 +29,11 @@ import httpx
 class ContextBridgeState(TypedDict):
     """
     Complete state for ContextBridge multi-agent orchestration.
-    Supports: BidDeed.AI, ZoneWise, Life OS, SPD chatbots.
+    Supports: BidDeed.AI, ZoneWise, Life OS, SPD, Michael D1 Swimming chatbots.
     """
     # ===== INPUT =====
     user_query: str
-    product: Literal["biddeed", "zonewise", "lifeos", "spd"]
+    product: Literal["biddeed", "zonewise", "lifeos", "spd", "michael"]
     conversation_id: str
     user_id: str
     session_context: Dict  # Previous conversation context
