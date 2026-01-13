@@ -159,6 +159,45 @@ TABLE: approvals
   - status: TEXT
   - created_at: TIMESTAMPTZ
 """
+        'michael': """
+-- Michael D1 Swimming Database Schema
+
+TABLE: swim_times
+  - id: BIGSERIAL PRIMARY KEY
+  - swimmer_id: TEXT
+  - event: TEXT (50_free, 100_free, 100_fly, 100_back)
+  - time_scy: TEXT
+  - meet_name: TEXT
+  - meet_date: DATE
+  - is_personal_best: BOOLEAN
+  - created_at: TIMESTAMPTZ
+
+TABLE: target_schools
+  - id: BIGSERIAL PRIMARY KEY
+  - school_name: TEXT
+  - conference: TEXT (SEC, Big Ten, ACC, etc.)
+  - fit_score: INTEGER (0-100)
+  - priority: INTEGER (1-27)
+  - coach_name: TEXT
+  - visit_date: DATE
+  - created_at: TIMESTAMPTZ
+
+TABLE: recruiting_outreach
+  - id: BIGSERIAL PRIMARY KEY
+  - school_name: TEXT
+  - coach_name: TEXT
+  - email_sent_date: DATE
+  - response_received: BOOLEAN
+  - created_at: TIMESTAMPTZ
+
+TABLE: meet_schedule
+  - id: BIGSERIAL PRIMARY KEY
+  - meet_name: TEXT
+  - meet_date: DATE
+  - events_entered: TEXT[]
+  - is_shabbat_conflict: BOOLEAN
+  - created_at: TIMESTAMPTZ
+""",
     }
     
     # Dangerous SQL patterns to block
