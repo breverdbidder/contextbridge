@@ -1,0 +1,126 @@
+name: Execute Supabase SQL
+
+on:
+  workflow_dispatch:
+    inputs:
+      sql_file:
+        description: 'Path to SQL file in repo (e.g., migrations/001_schema.sql)'
+        required: true
+        default: 'migrations/002_complete_schema.sql'
+      verify_only:
+        description: 'Dry run - show what would be executed without running'
+        required: false
+        default: 'false'
+
+jobs:
+  execute-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Install PostgreSQL Client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          psql --version
+      
+      - name: Verify SQL File Exists
+        run: |
+          if [ ! -f "${{ inputs.sql_file }}" ]; then
+            echo "❌ Error: SQL file not found: ${{ inputs.sql_file }}"
+            exit 1
+          fi
+          echo "✅ SQL file found: ${{ inputs.sql_file }}"
+          echo "File size: $(wc -l < ${{ inputs.sql_file }}) lines"
+      
+      - name: Show SQL Preview
+        run: |
+          echo "SQL Preview (first 20 lines):"
+          head -20 "${{ inputs.sql_file }}"
+          echo ""
+          echo "Total lines: $(wc -l < ${{ inputs.sql_file }})"
+      
+      - name: Verify Database Connection
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          echo "Testing database connection..."
+          if psql "$DATABASE_URL" -c "SELECT 1 as connection_test;" -t | grep -q "1"; then
+            echo "✅ Database connection successful"
+          else
+            echo "❌ Database connection failed"
+            exit 1
+          fi
+      
+      - name: Execute SQL (Dry Run)
+        if: inputs.verify_only == 'true'
+        run: |
+          echo "🔍 DRY RUN MODE - No SQL will be executed"
+          echo "Would execute: ${{ inputs.sql_file }}"
+          cat "${{ inputs.sql_file }}"
+      
+      - name: Execute SQL
+        if: inputs.verify_only != 'true'
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          echo "🚀 Executing SQL from: ${{ inputs.sql_file }}"
+          
+          # Execute with error handling
+          if psql "$DATABASE_URL" -f "${{ inputs.sql_file }}" -v ON_ERROR_STOP=1 --echo-errors; then
+            echo "✅ SQL executed successfully"
+          else
+            echo "❌ SQL execution failed"
+            exit 1
+          fi
+      
+      - name: Run Post-Execution Verification
+        if: inputs.verify_only != 'true'
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          echo "🔍 Running verification queries..."
+          
+          # List all tables
+          echo "Tables in database:"
+          psql "$DATABASE_URL" -c "\dt" -t
+          
+          # Check for specific ContextBridge tables
+          if psql "$DATABASE_URL" -c "SELECT COUNT(*) FROM target_schools;" -t 2>/dev/null; then
+            SCHOOL_COUNT=$(psql "$DATABASE_URL" -c "SELECT COUNT(*) FROM target_schools;" -t | tr -d ' ')
+            echo "✅ target_schools table exists with $SCHOOL_COUNT rows"
+            
+            if [ "$SCHOOL_COUNT" = "27" ]; then
+              echo "✅ PERFECT! All 27 target schools loaded"
+            fi
+          fi
+          
+          # Check for other expected tables
+          for table in context_embeddings contextbridge_conversations contextbridge_analytics swim_times recruiting_outreach meet_schedule; do
+            if psql "$DATABASE_URL" -c "SELECT 1 FROM information_schema.tables WHERE table_name='$table';" -t | grep -q "1"; then
+              echo "✅ Table exists: $table"
+            fi
+          done
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo ""
+          echo "================================================"
+          if [ "${{ inputs.verify_only }}" = "true" ]; then
+            echo "✅ DRY RUN COMPLETE"
+          elif [ "${{ job.status }}" = "success" ]; then
+            echo "✅ SQL EXECUTION SUCCESSFUL"
+            echo "================================================"
+            echo "File: ${{ inputs.sql_file }}"
+            echo "Database: Supabase PostgreSQL"
+            echo "Status: Completed successfully"
+          else
+            echo "❌ SQL EXECUTION FAILED"
+            echo "================================================"
+            echo "Check logs above for details"
+          fi
+          echo "================================================"
