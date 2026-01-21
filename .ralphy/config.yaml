@@ -1,0 +1,78 @@
+# =============================================================================
+# RALPHY PROJECT CONFIGURATION - ContextBridge
+# =============================================================================
+# LangGraph-powered unified context management platform
+# =============================================================================
+
+project:
+  name: "ContextBridge"
+  description: "LangGraph-powered AI platform for unified context management"
+  language: "Python"
+  framework: "FastAPI + LangGraph"
+  version: "1.0.0"
+
+repository:
+  owner: "breverdbidder"
+  name: "contextbridge"
+  default_branch: "main"
+  
+commands:
+  test: "pytest tests/ -v"
+  lint: "ruff check src/"
+  format: "ruff format src/"
+  build: "pip install -e ."
+  
+checks:
+  - "ruff check src/"
+  - "pytest tests/ -x"
+
+rules:
+  # Code style
+  - "Use Python 3.11+ features"
+  - "Async-first with httpx"
+  - "Use pydantic v2 for validation"
+  
+  # Architecture
+  - "LangGraph for multi-agent orchestration"
+  - "Context syncing between Claude.ai and Claude Code"
+  - "Supabase for state persistence"
+  
+  # Multi-project support
+  - "Support BidDeed.AI, ZoneWise, Life OS, SPD contexts"
+  - "Isolated context per project"
+  - "Cross-project insights aggregation"
+
+boundaries:
+  never_touch:
+    - "*.env*"
+    - "*.lock"
+    - "__pycache__/**"
+    
+  caution:
+    - "src/db/migrations/**"
+    - "src/agents/**"
+
+llm_config:
+  default_model: "claude-sonnet-4-5-20250929"
+  fallback_model: "gemini-2.5-flash"
+  
+execution:
+  max_iterations: 50
+  timeout_minutes: 60
+  retry_attempts: 3
+  
+commit:
+  prefix: "🌉"
+  format: "{prefix} {type}: {description}"
+
+integrations:
+  supabase:
+    tables:
+      - "sprint_tasks"
+      - "insights"
+      - "contexts"
+      - "sync_states"
+    
+  github:
+    auto_commit: true
+    auto_push: true
